@@ -8,8 +8,8 @@
         Fruit that...
 
 - Small Change:
-    -- Pause Button (P):
-        Press P and the game pauses
+    -- Rainbow Mode
+          Pressing R in game makes each cell of the snake become a different color
 - Unexpected Change:
     --
 
