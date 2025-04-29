@@ -1,17 +1,17 @@
 ######################################################################
-# 			     SNAKE!!!!                               #
+# 			     			 SNAKE!!!!                               #
 ######################################################################
 #           Programmed by Shane Shafferman and Eric Deas             #
 ######################################################################
-#	This program requires the Keyboard and Display MMIO          #
+#	This program requires the Keyboard and Display MMIO          	 #
 #       and the Bitmap Display to be connected to MIPS.              #
-#								     #
+#								     								 #
 #       Bitmap Display Settings:                                     #
-#	Unit Width: 8						     #
-#	Unit Height: 8						     #
-#	Display Width: 512					     #
-#	Display Height: 512					     #
-#	Base Address for Display: 0x10008000 ($gp)		     #
+#	Unit Width: 8						     						 #
+#	Unit Height: 8						     						 #
+#	Display Width: 512					     						 #
+#	Display Height: 512					     						 #
+#	Base Address for Display: 0x10008000 ($gp)		     			 #
 ######################################################################
 
 .data
@@ -23,10 +23,14 @@ screenWidth: 	.word 64
 screenHeight: 	.word 64
 
 #Colors
-snakeColor: 	.word	0x0066cc	 # blue
-backgroundColor:.word	0x000000	 # black
-borderColor:    .word	0x00ff00	 # green	
-fruitColor: 	.word	0xcc6611	 # orange
+snakeColor: 	.word	0x0066cc	# blue
+backgroundColor:.word	0x000000	# black
+borderColor:    .word	0x00ff00	# green	
+orangeFruit: 	.word	0xcc6611
+yellowFruit:	.word 	0xded233
+redFruit:		.word	0xde3333
+greenFruit:		.word 	0x32a852
+fruitColor:		.word	0xde3333	# init to green
 
 #score variable
 score: 		.word 0
@@ -599,8 +603,10 @@ DrawTailRight:
 	
 ######################################################
 # Draw Fruit
-######################################################	
+###################################################################################### FRUIT STUFF	
 DrawFruit:
+	#jal PickFruitColor
+	
 	#check collision with fruit
 	lw $a0, snakeHeadX
 	lw $a1, snakeHeadY
@@ -612,6 +618,7 @@ DrawFruit:
 	lw $a1, fruitPositionY
 	jal CoordinateToAddress
 	add $a0, $v0, $zero
+	
 	lw $a1, fruitColor
 	jal DrawPixel
 	j InputCheck
@@ -806,7 +813,6 @@ Pause:
 #	1 - does hit fruit
 ##################################################################
 CheckFruitCollision:
-	
 	#get fruit coordinates
 	lw $t0, fruitPositionX
 	lw $t1, fruitPositionY
@@ -828,6 +834,18 @@ YEqualFruit:
 	lw $t6, scoreGain
 	add $t5, $t5, $t6
 	sw $t5, score
+	
+	#lw $t7, fruitColor
+	#beq $t7, 0xded233, increaseGameSpeed	# check if fruit is yellow
+	#j continue_collision
+	
+	#increaseGameSpeed:
+		#lw $t9, gameSpeed
+		#sub $t9, $t9, 20
+		#sw $t9, gameSpeed
+		#j continue_collision
+		
+	continue_collision:
 	# play sound to signify score update
 	li $v0, 31
 	li $a0, 79
@@ -845,7 +863,42 @@ YEqualFruit:
 	li $v0, 1 #set return value to 1 for collision
 	
 ExitCollisionCheck:
+	beq $v0, 1, PickFruitColor
 	jr $ra
+	
+PickFruitColor:
+	li $v0, 42
+	li $a1, 4
+	syscall
+	
+	beq $a0, 0, red
+	beq $a0, 1, green
+	beq $a0, 2, yellow
+	beq $a0, 3, orange
+	
+	red:
+		lw $a1, redFruit
+		sw $a1, fruitColor
+		li $v0, 1
+		jr $ra
+		
+	green:
+		lw $a1, greenFruit
+		sw $a1, fruitColor
+		li $v0, 1
+		jr $ra
+		
+	yellow:
+		lw $a1, yellowFruit
+		sw $a1, fruitColor
+		li $v0, 1
+		jr $ra
+		
+	orange:
+		lw $a1, orangeFruit
+		sw $a1, fruitColor
+		li $v0, 1
+		jr $ra
 	
 ##################################################################
 # Check Snake Body Collision
