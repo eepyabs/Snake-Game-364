@@ -189,74 +189,22 @@ DrawBorder:
 	bne $t1, 64, BottomLoop	# loop through to draw entire bottom border
 	
 ######################################################
-# Draw Initial Snake Position
 ######################################################
-	#draw snake head
-	lw $a0, snakeHeadX #load x coordinate
-	lw $a1, snakeHeadY #load y coordinate
-	jal CoordinateToAddress #get screen coordinates
-	move $a0, $v0 #copy coordinates to $a0
-	lw $a1, snakeColor #store color into $a1
-	jal DrawPixel	#draw color at pixel
-	
-	#draw middle portion
-	lw $a0, snakeHeadX #load x coordinate
-	lw $a1, snakeHeadY #load y coordinate
-	add $a1, $a1, 1
-	jal CoordinateToAddress #get screen coordinates
-	move $a0, $v0 #copy coordinates to $a0
-	lw $a1, snakeColor #store color into $a1
-	jal DrawPixel	#draw color at pixel
-	
-	#TEST 8 PIXELS
-	lw $a0, snakeHeadX #load x coordinate
-	lw $a1, snakeHeadY #load y coordinate
-	add $a1, $a1, 2
-	jal CoordinateToAddress #get screen coordinates
-	move $a0, $v0 #copy coordinates to $a0
-	lw $a1, snakeColor #store color into $a1
-	jal DrawPixel	#draw color at pixel
-	
-	lw $a0, snakeHeadX #load x coordinate
-	lw $a1, snakeHeadY #load y coordinate
-	add $a1, $a1, 3
-	jal CoordinateToAddress #get screen coordinates
-	move $a0, $v0 #copy coordinates to $a0
-	lw $a1, snakeColor #store color into $a1
-	jal DrawPixel	#draw color at pixel
-	
-	lw $a0, snakeHeadX #load x coordinate
-	lw $a1, snakeHeadY #load y coordinate
-	add $a1, $a1, 4
-	jal CoordinateToAddress #get screen coordinates
-	move $a0, $v0 #copy coordinates to $a0
-	lw $a1, snakeColor #store color into $a1
-	jal DrawPixel	#draw color at pixel
-	
-	lw $a0, snakeHeadX #load x coordinate
-	lw $a1, snakeHeadY #load y coordinate
-	add $a1, $a1, 5
-	jal CoordinateToAddress #get screen coordinates
-	move $a0, $v0 #copy coordinates to $a0
-	lw $a1, snakeColor #store color into $a1
-	jal DrawPixel	#draw color at pixel
-	
-	lw $a0, snakeHeadX #load x coordinate
-	lw $a1, snakeHeadY #load y coordinate
-	add $a1, $a1, 6
-	jal CoordinateToAddress #get screen coordinates
-	move $a0, $v0 #copy coordinates to $a0
-	lw $a1, snakeColor #store color into $a1
-	jal DrawPixel	#draw color at pixel
-	
-	#draw snake tail
-	lw $a0, snakeTailX #load x coordinate
-	lw $a1, snakeTailY #load y coordinate
-	jal CoordinateToAddress #get screen coordinates
-	move $a0, $v0 #copy coordinates to $a0
-	lw $a1, snakeColor #store color into $a1
-	jal DrawPixel	#draw color at pixel
+# Draw Initial Snake Position (optimized)
 ######################################################
+    li   $t2, 0               # offset (0=head, 1–6=body)
+DrawInitSnakeLoop:
+    lw   $a0, snakeHeadX     # base X position
+    lw   $a1, snakeHeadY     # base Y position
+    add  $a1, $a1, $t2       # shift Y by offset amount
+    jal  CoordinateToAddress # find the address in v0
+    move $a0, $v0            # pass address to DrawPixel
+    lw   $a1, snakeColor     # color the pixel
+    jal  DrawPixel 
+
+    addiu $t2, $t2, 1        # increment offset by 1 to next position
+    li   $t3, 7              # total pixels to draw 
+    blt  $t2, $t3, DrawInitSnakeLoop # loop until all pixels are drawn
 # Spawn Fruit
 ######################################################	
 SpawnFruit:
