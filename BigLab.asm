@@ -93,7 +93,7 @@ FillLoop:
 # Initialize Variables
 ######################################################
 Init:
-
+	lw $fp, snakeColor
 	li $t0, 31
 	sw $t0, snakeHeadX
 	sw $t0, snakeHeadY
@@ -196,7 +196,8 @@ DrawBorder:
 	lw $a1, snakeHeadY #load y coordinate
 	jal CoordinateToAddress #get screen coordinates
 	move $a0, $v0 #copy coordinates to $a0
-	lw $a1, snakeColor #store color into $a1
+	addi $fp, $zero, 0x5716
+	move $a1, $fp #store color into $a1
 	jal DrawPixel	#draw color at pixel
 	
 	#draw middle portion
@@ -204,8 +205,10 @@ DrawBorder:
 	lw $a1, snakeHeadY #load y coordinate
 	add $a1, $a1, 1
 	jal CoordinateToAddress #get screen coordinates
-	move $a0, $v0 #copy coordinates to $a0
-	lw $a1, snakeColor #store color into $a1
+	addi $fp, $zero, 0x5716
+	move $a0, $v0 #copy coordinates to $a
+	addi $fp, $zero, 0x5716
+	move $a1, $fp #store color into $a1
 	jal DrawPixel	#draw color at pixel
 	
 	#TEST 8 PIXELS
@@ -213,48 +216,59 @@ DrawBorder:
 	lw $a1, snakeHeadY #load y coordinate
 	add $a1, $a1, 2
 	jal CoordinateToAddress #get screen coordinates
-	move $a0, $v0 #copy coordinates to $a0
-	lw $a1, snakeColor #store color into $a1
+	addi $fp, $zero, 0x5716
+	move $a0, $v0 #copy coordinates to $a	
+	addi $fp, $zero, 0x5716
+	move $a1, $fp #store color into $a1
 	jal DrawPixel	#draw color at pixel
 	
 	lw $a0, snakeHeadX #load x coordinate
 	lw $a1, snakeHeadY #load y coordinate
 	add $a1, $a1, 3
 	jal CoordinateToAddress #get screen coordinates
-	move $a0, $v0 #copy coordinates to $a0
-	lw $a1, snakeColor #store color into $a1
+	addi $fp, $zero, 0x5716
+	move $a0, $v0 #copy coordinates to $a
+	addi $fp, $zero, 0x5716
+	move $a1, $fp #store color into $a1
 	jal DrawPixel	#draw color at pixel
 	
 	lw $a0, snakeHeadX #load x coordinate
 	lw $a1, snakeHeadY #load y coordinate
 	add $a1, $a1, 4
 	jal CoordinateToAddress #get screen coordinates
-	move $a0, $v0 #copy coordinates to $a0
-	lw $a1, snakeColor #store color into $a1
+	addi $fp, $zero, 0x5716
+	move $a0, $v0 #copy coordinates to $a
+	addi $fp, $zero, 0x5716
+	move $a1, $fp #store color into $a1
 	jal DrawPixel	#draw color at pixel
 	
 	lw $a0, snakeHeadX #load x coordinate
 	lw $a1, snakeHeadY #load y coordinate
 	add $a1, $a1, 5
 	jal CoordinateToAddress #get screen coordinates
-	move $a0, $v0 #copy coordinates to $a0
-	lw $a1, snakeColor #store color into $a1
+	addi $fp, $zero, 0x5716
+	move $a0, $v0 #copy coordinates to $a
+	addi $fp, $zero, 0x5716
+
+	move $a1, $fp #store color into $a1
 	jal DrawPixel	#draw color at pixel
 	
 	lw $a0, snakeHeadX #load x coordinate
 	lw $a1, snakeHeadY #load y coordinate
 	add $a1, $a1, 6
 	jal CoordinateToAddress #get screen coordinates
+	addi $fp, $zero, 0x5716
 	move $a0, $v0 #copy coordinates to $a0
-	lw $a1, snakeColor #store color into $a1
+	addi $fp, $zero, 0x5716	
+	move $a1, $fp #store color into $a1
 	jal DrawPixel	#draw color at pixel
 	
 	#draw snake tail
 	lw $a0, snakeTailX #load x coordinate
 	lw $a1, snakeTailY #load y coordinate
 	jal CoordinateToAddress #get screen coordinates
-	move $a0, $v0 #copy coordinates to $a0
-	lw $a1, snakeColor #store color into $a1
+	move $a0, $v0 #copy coordinates to $a05716	
+	move $a1, $fp #store color into $a1
 	jal DrawPixel	#draw color at pixel
 ######################################################
 # Spawn Fruit
@@ -331,8 +345,9 @@ DrawUpLoop:
 	add $a0, $t0, $zero
 	add $a1, $t1, $zero
 	jal CoordinateToAddress
+	addi $fp, $zero, 0x0000FF
 	add $a0, $v0, $zero
-	lw $a1, snakeColor
+	move $a1, $fp
 	jal DrawPixel
 
 	sw  $t1, snakeHeadY
@@ -352,7 +367,8 @@ DrawDownLoop:
 	add $a1, $t1, $zero
 	jal CoordinateToAddress
 	add $a0, $v0, $zero
-	lw $a1, snakeColor
+	addi $fp, $zero, 0xFF0000
+	move $a1, $fp
 	jal DrawPixel
 	
 	sw  $t1, snakeHeadY	
@@ -372,7 +388,8 @@ DrawLeftLoop:
 	add $a1, $t1, $zero
 	jal CoordinateToAddress
 	add $a0, $v0, $zero
-	lw $a1, snakeColor
+	addi $fp, $zero, 0xFFFF00
+	move $a1, $fp
 	jal DrawPixel
 	
 	sw  $t0, snakeHeadX	
@@ -391,8 +408,9 @@ DrawRightLoop:
 	add $a0, $t0, $zero
 	add $a1, $t1, $zero
 	jal CoordinateToAddress
+	addi $fp, $zero, 0x5716	
 	add $a0, $v0, $zero
-	lw $a1, snakeColor
+	move $a1, $fp
 	jal DrawPixel
 	
 	sw  $t0, snakeHeadX
@@ -439,7 +457,8 @@ IncreaseLengthUp:
 StoreLocationUp:
 	sw $t8, locationInArray 
 DrawTailUp:
-	lw $a1, snakeColor
+	addi $fp, $zero, 0x0000FF	
+	move $a1, $fp
 	jal DrawPixel
 	#erase behind the snake
 	lw $t0, snakeTailX
@@ -480,8 +499,9 @@ IncreaseLengthDown:
 	li $t8, 0
 StoreLocationDown:
 	sw $t8, locationInArray  
-DrawTailDown:	
-	lw $a1, snakeColor
+DrawTailDown:
+	addi $fp, $zero, 0xFF0000
+	move $a1, $fp
 	jal DrawPixel	
 	#erase behind the snake
 	lw $t0, snakeTailX
@@ -522,8 +542,9 @@ IncreaseLengthLeft:
 	li $t8, 0
 StoreLocationLeft:
 	sw $t8, locationInArray  
-DrawTailLeft:	
-	lw $a1, snakeColor
+DrawTailLeft:
+	addi $fp, $zero, 0xFFFF00
+	move $a1, $fp
 	jal DrawPixel	
 	#erase behind the snake
 	lw $t0, snakeTailX
@@ -581,9 +602,9 @@ IncreaseLengthRight:
 	li $t8, 0
 StoreLocationRight:
 	sw $t8, locationInArray  
-DrawTailRight:	
-
-	lw $a1, snakeColor
+DrawTailRight:
+	addi $fp, $zero, 0x008000
+	move $a1, $fp
 	jal DrawPixel	
 	#erase behind the snake
 	lw $t0, snakeTailX
