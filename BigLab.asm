@@ -133,7 +133,8 @@ ClearRegisters:
 	li $s1, 0
 	li $s2, 0
 	li $s3, 0
-	li $s4, 0		
+	li $s4, 0
+	li $s5, 0		
 
 ######################################################
 # Draw Border
@@ -275,14 +276,22 @@ SpawnFruit:
 	#store Y position
 	sw $a0, fruitPositionY
 	jal IncreaseDifficulty
+	j InputCheck
 	
 ######################################################
 # Check for Direction Change
 ######################################################
 
+ToggleRainbow:
+	xori $s5, $s5, 1	#toggle the rainbow mode flag
+	j SelectDrawDirection
+
+
 InputCheck:
 	lw $a0, gameSpeed
 	jal Pause
+	
+
 
 #get the coordinates for direction change if needed
 	lw $a0, snakeHeadX
@@ -297,18 +306,21 @@ InputCheck:
 	beqz $t1, SelectDrawDirection #if no new input, draw in same direction
 	lw $a1, 4($t0) #store direction based on input
 	
+	
 DirectionCheck:	
 	lw $a0, direction # load current direction into #a0
 
 	jal CheckDirection	#check to see if the direction is valid
 	beqz $v0, InputCheck	#if input is not valid, get new input
+	beq $a1, 114, ToggleRainbow	#if the input was an r key, toggle the rainbow mode flag
 	sw $a1, direction	#store the new direction if valid
 	lw $t7, direction	#store the direction into $t7
 
 ######################################################
 # Update Snake Head position
 ######################################################	
-			
+	
+				
 SelectDrawDirection:
 	#check to see which direction to draw
 	beq $t7, 119, DrawUpLoop
@@ -317,6 +329,13 @@ SelectDrawDirection:
 	beq  $t7, 100, DrawRightLoop
 	#jump back to get input if an unsupported key was pressed
 	j InputCheck
+
+RainbowModeUp:
+	#change the snake color if rainbow mode is on
+	lw $a1, snakeColor	#load snake color into $a1
+	addi $a1, $a1, 0x202020	#modify snake color
+	sw $a1, snakeColor	#store modified color
+	j RainbowCheckUp	#return
 	
 DrawUpLoop:
 	#check for collision before moving to next pixel
@@ -332,11 +351,20 @@ DrawUpLoop:
 	add $a1, $t1, $zero
 	jal CoordinateToAddress
 	add $a0, $v0, $zero
+	beq $s5, 1, RainbowModeUp	#branch to rainbow mode if the flag is on
+RainbowCheckUp:
 	lw $a1, snakeColor
 	jal DrawPixel
-
+	
 	sw  $t1, snakeHeadY
 	j UpdateTailPosition #head updated, update tail
+	
+RainbowModeDown:
+	#change the snake color if rainbow mode is on
+	lw $a1, snakeColor	#load snake color into $a1
+	addi $a1, $a1, 0x202020	#modify snake color
+	sw $a1, snakeColor	#store modified color
+	j RainbowCheckDown	#return
 	
 DrawDownLoop:
 	#check for collision before moving to next pixel
@@ -352,11 +380,20 @@ DrawDownLoop:
 	add $a1, $t1, $zero
 	jal CoordinateToAddress
 	add $a0, $v0, $zero
+	beq $s5, 1, RainbowModeDown	#branch to rainbow mode if the flag is on
+RainbowCheckDown:
 	lw $a1, snakeColor
 	jal DrawPixel
 	
 	sw  $t1, snakeHeadY	
 	j UpdateTailPosition #head updated, update tail
+
+RainbowModeLeft:
+	#change the snake color if rainbow mode is on
+	lw $a1, snakeColor	#load snake color into $a1
+	addi $a1, $a1, 0x202020	#modify snake color
+	sw $a1, snakeColor	#store modified color
+	j RainbowCheckLeft	#return
 
 DrawLeftLoop:
 	#check for collision before moving to next pixel
@@ -372,11 +409,20 @@ DrawLeftLoop:
 	add $a1, $t1, $zero
 	jal CoordinateToAddress
 	add $a0, $v0, $zero
+	beq $s5, 1, RainbowModeLeft	#branch to rainbow mode if the flag is on
+RainbowCheckLeft:
 	lw $a1, snakeColor
 	jal DrawPixel
 	
 	sw  $t0, snakeHeadX	
 	j UpdateTailPosition #head updated, update tail
+
+RainbowModeRight:
+	#change the snake color if rainbow mode is on
+	lw $a1, snakeColor	#load snake color into $a1
+	addi $a1, $a1, 0x202020	#modify snake color
+	sw $a1, snakeColor	#store modified color
+	j RainbowCheckRight	#return
 
 DrawRightLoop:
 	#check for collision before moving to next pixel
@@ -392,6 +438,8 @@ DrawRightLoop:
 	add $a1, $t1, $zero
 	jal CoordinateToAddress
 	add $a0, $v0, $zero
+	beq $s5, 1, RainbowModeRight   #branch to rainbow mode if the flag is on
+RainbowCheckRight:
 	lw $a1, snakeColor
 	jal DrawPixel
 	
@@ -439,8 +487,8 @@ IncreaseLengthUp:
 StoreLocationUp:
 	sw $t8, locationInArray 
 DrawTailUp:
-	lw $a1, snakeColor
-	jal DrawPixel
+	#lw $a1, snakeColor
+	#jal DrawPixel
 	#erase behind the snake
 	lw $t0, snakeTailX
 	lw $t1, snakeTailY
@@ -481,8 +529,8 @@ IncreaseLengthDown:
 StoreLocationDown:
 	sw $t8, locationInArray  
 DrawTailDown:	
-	lw $a1, snakeColor
-	jal DrawPixel	
+	#lw $a1, snakeColor
+	#jal DrawPixel	
 	#erase behind the snake
 	lw $t0, snakeTailX
 	lw $t1, snakeTailY
@@ -523,8 +571,8 @@ IncreaseLengthLeft:
 StoreLocationLeft:
 	sw $t8, locationInArray  
 DrawTailLeft:	
-	lw $a1, snakeColor
-	jal DrawPixel	
+	#lw $a1, snakeColor
+	#jal DrawPixel	
 	#erase behind the snake
 	lw $t0, snakeTailX
 	lw $t1, snakeTailY
@@ -583,8 +631,8 @@ StoreLocationRight:
 	sw $t8, locationInArray  
 DrawTailRight:	
 
-	lw $a1, snakeColor
-	jal DrawPixel	
+	#lw $a1, snakeColor
+	#jal DrawPixel	
 	#erase behind the snake
 	lw $t0, snakeTailX
 	lw $t1, snakeTailY
@@ -660,6 +708,7 @@ DrawPixel:
 CheckDirection:
 	beq $a0, $a1, Same  #if the input is the same as current direction
 				#continue moving in the direction
+	beq $a0, 114, Same  #if the r key was pressed continue moving in the same direction
 	beq $a0, 119, checkIsDownPressed #if  moving up, check to see if down is pressed
 	beq $a0, 115, checkIsUpPressed	#if moving down, check to see if up is pressed
 	beq $a0, 97, checkIsRightPressed #if moving left, check to see if right is pressed
@@ -796,6 +845,8 @@ Pause:
 	syscall
 	jr $ra
 	
+	
+
 ##################################################################
 # Check Fruit Collision
 # $a0 - snakeHeadPositionX
@@ -881,6 +932,8 @@ CheckUp:
 	lw $t3, borderColor
 	beq $t1, $t2, Exit #If colors are equal - YOU LOST!
 	beq $t1, $t3, Exit #If you hit the border - YOU LOST!
+	beq $t1, 0xcc6611, BodyCollisionDone #if the color is the fruit color, you're safe
+	bnez $t1, Exit		#if the color isn't black, you lose
 	j BodyCollisionDone # if not, leave function
 
 CheckDown:
@@ -895,6 +948,8 @@ CheckDown:
 	lw $t3, borderColor
 	beq $t1, $t2, Exit #If colors are equal - YOU LOST!
 	beq $t1, $t3, Exit #If you hit the border - YOU LOST!
+	beq $t1, 0xcc6611, BodyCollisionDone #if the color is the fruit color, you're safe
+	bnez $t1, Exit		#if the color isn't black, you lose
 	j BodyCollisionDone # if not, leave function
 
 CheckLeft:
@@ -909,6 +964,8 @@ CheckLeft:
 	lw $t3, borderColor
 	beq $t1, $t2, Exit #If colors are equal - YOU LOST!
 	beq $t1, $t3, Exit #If you hit the border - YOU LOST!
+	beq $t1, 0xcc6611, BodyCollisionDone #if the color is the fruit color, you're safe
+	bnez $t1, Exit		#if the color isn't black, you lose
 	j BodyCollisionDone # if not, leave function
 
 CheckRight:
@@ -923,6 +980,8 @@ CheckRight:
 	lw $t3, borderColor
 	beq $t1, $t2, Exit #If colors are equal - YOU LOST!
 	beq $t1, $t3, Exit #If you hit the border - YOU LOST!
+	beq $t1, 0xcc6611, BodyCollisionDone #if the color is the fruit color, you're safe
+	bnez $t1, Exit		#if the color isn't black, you lose
 	j BodyCollisionDone # if not, leave function
 
 BodyCollisionDone:
