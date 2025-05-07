@@ -11,7 +11,8 @@
     -- Rainbow Mode
           Pressing R in game makes each cell of the snake become a different color
 - Unexpected Change:
-    --
+    -- Nyan Cat
+          When the snake hits the wall, a bit map image of Nyan Cat appears
 
 - Optimization:
     -- 
