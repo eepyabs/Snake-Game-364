@@ -23,10 +23,15 @@ screenWidth: 	.word 64
 screenHeight: 	.word 64
 
 #Colors
-snakeColor: 	.word	0x0066cc	 # blue
-backgroundColor:.word	0x000000	 # black
-borderColor:    .word	0x00ff00	 # green	
-fruitColor: 	.word	0xcc6611	 # orange
+snakeColor: 	.word	0x0066cc	# blue
+backgroundColor:.word	0x000000	# black
+borderColor:    .word	0x00ff00	# green	
+orangeFruit: 	.word	0xcc6611
+yellowFruit:	.word 	0xded233
+redFruit:	.word	0xde3333
+greenFruit:	.word 	0x32a852
+fruitColor:	.word	0xde3333	# init to green
+prevFruitColor: .word   0x000000	# init to black
 
 #score variable
 score: 		.word 0
@@ -47,8 +52,11 @@ snakeHeadX: 	.word 31
 snakeHeadY:	.word 31
 snakeTailX:	.word 31
 snakeTailY:	.word 37
-direction:	.word 119 #initially moving up
+direction:	.word 119 # initially moving up
 tailDirection:	.word 119
+
+newLengthCounter: .word 0 # the number of lengths to add
+
 # direction variable
 # 119 - moving up - W
 # 115 - moving down - S
@@ -208,6 +216,9 @@ DrawInitSnakeLoop:
 # Spawn Fruit
 ######################################################	
 SpawnFruit:
+	# pick random fruit color
+	jal PickFruitColor
+	
 	#syscall for random int with a upper bound
 	li $v0, 42
 	#upper bound 61 (0 <= $a0 < $a1)
@@ -222,7 +233,39 @@ SpawnFruit:
 	addiu $a0, $a0, 1
 	#store Y position
 	sw $a0, fruitPositionY
+	
+	lw $a2, prevFruitColor
+	
+	beq $a2, 0xded233, AteYellow	# previous fruit was yellow
+	beq $a2, 0xde3333, AteRed	# previous fruit was red
+	beq $a2, 0x32a852, AteGreen
+	beq $a2, 0xcc6611, AteOrange
+	j FinishSpawnFruit
+
+# increase difficulty if snake ate yellow	
+AteYellow:
 	jal IncreaseDifficulty
+	j FinishSpawnFruit
+
+# add extra length if snake ate red
+AteOrange:
+	li $a2, 2
+	sw $a2, newLengthCounter
+	j FinishSpawnFruit
+
+# equivalent to two fruits
+AteGreen:
+	lw $t0, score
+	lw $t1, scoreGain
+	add $t0, $t0, $t1
+	sw $t0, score
+	j FinishSpawnFruit
+
+# normal fruit, do nothing
+AteRed:
+	j FinishSpawnFruit
+	
+FinishSpawnFruit:
 	
 ######################################################
 # Check for Direction Change
@@ -352,6 +395,17 @@ DrawRightLoop:
 			
 UpdateTailPosition:	
 	lw $t2, tailDirection
+	lw $a2, newLengthCounter 	# load the number of lengths to be added
+	
+	# If newLengthCounter > 0, 
+	# set addLength flag to 1
+	# subract from newLengthCounter
+	beqz $a2, CheckTail
+	li $s1, 1
+	subi $a2, $a2, 1
+	sw $a2, newLengthCounter
+	
+	CheckTail:
 	#branch based on which direction tail is moving
 	beq  $t2, 119, MoveTailUp
 	beq  $t2, 115, MoveTailDown
@@ -366,6 +420,7 @@ MoveTailUp:
 	lw $t9, 0($t0)
 	lw $a0, snakeTailX  #get snake tail position
 	lw $a1, snakeTailY
+	
 	#if the index is out of bounds, set back to zero
 	beq $s1, 1, IncreaseLengthUp #branch if length should be increased
 	addiu $a1, $a1, -1 #change tail position if no length change
@@ -399,7 +454,7 @@ DrawTailUp:
 	add $a0, $v0, $zero
 	lw $a1, backgroundColor
 	jal DrawPixel	
-	j DrawFruit  #finished updating snake, update fruit
+	j DrawFruit
 
 MoveTailDown:
 	#get the screen coordinates of the next direction change
@@ -441,7 +496,7 @@ DrawTailDown:
 	add $a0, $v0, $zero
 	lw $a1, backgroundColor
 	jal DrawPixel	
-	j DrawFruit #finished updating snake, update fruit
+	j DrawFruit
 
 MoveTailLeft:
 	#update the tail position when moving left
@@ -483,8 +538,8 @@ DrawTailLeft:
 	add $a0, $v0, $zero
 	lw $a1, backgroundColor
 	jal DrawPixel	
-	j DrawFruit  #finished updating snake, update fruit
-
+	j DrawFruit
+	
 MoveTailRight:
 	#get the screen coordinates of the next direction change
 	lw $t8, locationInArray
@@ -499,7 +554,7 @@ MoveTailRight:
 	lw $a1, snakeTailY
 	#if the length needs to be increased
 	#do not change coordinates
-	beq $s1, 1, IncreaseLengthRight
+	beq $s1, 1, IncreaseLengthRight #branch if length should be increased
 	#change tail position
 	addiu $a0, $a0, 1
 	#store new tail position
@@ -543,12 +598,20 @@ DrawTailRight:
 	add $a0, $v0, $zero
 	lw $a1, backgroundColor
 	jal DrawPixel
-	j DrawFruit  #finished updating snake, update fruit
+	j DrawFruit
+	
+UpdateLengthCounter:
+	lw $a2, newLengthCounter
+	bnez $a2, AddLength
+	j DrawFruit #finished updating snake, update fruit
+	
 	
 ######################################################
 # Draw Fruit
-######################################################	
+###################################################################################### FRUIT STUFF	
 DrawFruit:
+	#jal PickFruitColor
+	
 	#check collision with fruit
 	lw $a0, snakeHeadX
 	lw $a1, snakeHeadY
@@ -560,6 +623,7 @@ DrawFruit:
 	lw $a1, fruitPositionY
 	jal CoordinateToAddress
 	add $a0, $v0, $zero
+	
 	lw $a1, fruitColor
 	jal DrawPixel
 	j InputCheck
@@ -754,7 +818,6 @@ Pause:
 #	1 - does hit fruit
 ##################################################################
 CheckFruitCollision:
-	
 	#get fruit coordinates
 	lw $t0, fruitPositionX
 	lw $t1, fruitPositionY
@@ -776,6 +839,8 @@ YEqualFruit:
 	lw $t6, scoreGain
 	add $t5, $t5, $t6
 	sw $t5, score
+		
+	continue_collision:
 	# play sound to signify score update
 	li $v0, 31
 	li $a0, 79
@@ -794,6 +859,44 @@ YEqualFruit:
 	
 ExitCollisionCheck:
 	jr $ra
+	
+PickFruitColor:
+	# store the previous fruit color
+	lw $a1, fruitColor
+	sw $a1, prevFruitColor
+	
+	li $v0, 42
+	li $a1, 4
+	syscall
+	
+	beq $a0, 0, red
+	beq $a0, 1, green
+	beq $a0, 2, yellow
+	beq $a0, 3, orange
+	
+	red:
+		lw $a1, redFruit
+		sw $a1, fruitColor
+		li $v0, 1
+		jr $ra
+		
+	green:
+		lw $a1, greenFruit
+		sw $a1, fruitColor
+		li $v0, 1
+		jr $ra
+		
+	yellow:
+		lw $a1, yellowFruit
+		sw $a1, fruitColor
+		li $v0, 1
+		jr $ra
+		
+	orange:
+		lw $a1, orangeFruit
+		sw $a1, fruitColor
+		li $v0, 1
+		jr $ra
 	
 ##################################################################
 # Check Snake Body Collision
@@ -904,7 +1007,7 @@ IncreaseDifficulty:
 	sll $t0, $t0, 1 
 	#load the game speed
 	lw $t1, gameSpeed
-	#subtract 25 from the move speed
+	#subtract 50 from the move speed
 	addiu $t1, $t1, -25
 	#store new speed
 	sw $t1, gameSpeed
