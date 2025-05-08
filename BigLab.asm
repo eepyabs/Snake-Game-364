@@ -30,6 +30,8 @@ orangeFruit: 	.word	0xcc6611
 yellowFruit:	.word 	0xded233
 redFruit:	.word	0xde3333
 greenFruit:	.word 	0x32a852
+whiteFruit:	.word 	0xffffff
+darkFruit: 	.word   0x212121
 fruitColor:	.word	0xde3333	# init to green
 prevFruitColor: .word   0x000000	# init to black
 
@@ -39,10 +41,7 @@ score: 		.word 0
 #increases as program gets harder
 scoreGain:	.word 10
 #speed the snake moves at, increases as game progresses
-gameSpeed:	.word 200
-#array to store the scores in which difficulty should increase
-scoreMilestones: .word 100, 250, 500, 1000, 5000, 10000
-scoreArrayPosition: .word 0
+gameSpeed:	.word 150
 #end game message
 lostMessage:	.asciiz "You have died.... Your score was: "
 replayMessage:	.asciiz "Would you like to replay?"
@@ -148,11 +147,10 @@ Init:
 	sw $t0, tailDirection
 	li $t0, 10
 	sw $t0, scoreGain
-	li $t0, 200
+	li $t0, 150
 	sw $t0, gameSpeed
 	sw $zero, arrayPosition
 	sw $zero, locationInArray
-	sw $zero, scoreArrayPosition
 	sw $zero, score
 	
 ClearRegisters:
@@ -274,8 +272,9 @@ SpawnFruit:
 	
 	beq $a2, 0xded233, AteYellow	# previous fruit was yellow
 	beq $a2, 0xde3333, AteRed	# previous fruit was red
-	beq $a2, 0x32a852, AteGreen
-	beq $a2, 0xcc6611, AteOrange
+	beq $a2, 0x32a852, AteGreen	# previous fruit was green
+	beq $a2, 0xcc6611, AteOrange	# previous fruit was orange
+	beq $a2, 0xffffff, AteWhite	# previous fruit was white
 	j FinishSpawnFruit
 
 # increase difficulty if snake ate yellow	
@@ -296,6 +295,9 @@ AteGreen:
 	add $t0, $t0, $t1
 	sw $t0, score
 	j FinishSpawnFruit
+	
+AteWhite:
+	j ToggleRainbow
 
 # normal fruit, do nothing
 AteRed:
@@ -343,8 +345,7 @@ DirectionCheck:
 ######################################################
 # Update Snake Head position
 ######################################################	
-	
-				
+					
 SelectDrawDirection:
 	#check to see which direction to draw
 	beq $t7, 119, DrawUpLoop
@@ -691,8 +692,6 @@ UpdateLengthCounter:
 # Draw Fruit
 ###################################################################################### FRUIT STUFF	
 DrawFruit:
-	#jal PickFruitColor
-	
 	#check collision with fruit
 	lw $a0, snakeHeadX
 	lw $a1, snakeHeadY
@@ -942,7 +941,6 @@ YEqualFruit:
 	li $v0, 1 #set return value to 1 for collision
 	
 ExitCollisionCheck:
-	# beq $v0, 1, PickFruitColor
 	jr $ra
 	
 PickFruitColor:
@@ -951,13 +949,15 @@ PickFruitColor:
 	sw $a1, prevFruitColor
 	
 	li $v0, 42
-	li $a1, 4
+	li $a1, 6
 	syscall
 	
 	beq $a0, 0, red
 	beq $a0, 1, green
 	beq $a0, 2, yellow
 	beq $a0, 3, orange
+	beq $a0, 4, white
+	beq $a0, 5, dark
 	
 	red:
 		lw $a1, redFruit
@@ -979,6 +979,20 @@ PickFruitColor:
 		
 	orange:
 		lw $a1, orangeFruit
+		sw $a1, fruitColor
+		li $v0, 1
+		jr $ra
+		
+	white:
+		lw $a1, whiteFruit
+		sw $a1, fruitColor
+		li $v0, 1
+		jr $ra
+		
+	dark:
+		lw $a1, score
+		blt $a1, 250, yellow	# if score less than 250, don't pick dark
+		lw $a1, darkFruit
 		sw $a1, fruitColor
 		li $v0, 1
 		jr $ra
@@ -1017,6 +1031,8 @@ CheckUp:
 	beq $t1, 0x32a852, BodyCollisionDone #if the color is the fruit color, you're safe
 	beq $t1, 0xde3333 , BodyCollisionDone #if the color is the fruit color, you're safe
 	beq $t1, 0xded233, BodyCollisionDone #if the color is the fruit color, you're safe
+	beq $t1, 0xffffff, BodyCollisionDone #if the color is the fruit color, you're safe
+	beq $t1, 0x212121, BodyCollisionDone #if the color is the fruit color, you're safe
 	#add $s6, $t1, $zero
 	lw $t2, snakeColor
 	lw $t3, borderColor
@@ -1038,6 +1054,8 @@ CheckDown:
 	beq $t1, 0x32a852, BodyCollisionDone #if the color is the fruit color, you're safe
 	beq $t1, 0xde3333 , BodyCollisionDone #if the color is the fruit color, you're safe
 	beq $t1, 0xded233, BodyCollisionDone #if the color is the fruit color, you're safe
+	beq $t1, 0xffffff, BodyCollisionDone #if the color is the fruit color, you're safe
+	beq $t1, 0x212121, BodyCollisionDone #if the color is the fruit color, you're safe
 	#add $s6, $t1, $zero
 	lw $t2, snakeColor
 	lw $t3, borderColor
@@ -1059,6 +1077,8 @@ CheckLeft:
 	beq $t1, 0x32a852, BodyCollisionDone #if the color is the fruit color, you're safe
 	beq $t1, 0xde3333 , BodyCollisionDone #if the color is the fruit color, you're safe
 	beq $t1, 0xded233, BodyCollisionDone #if the color is the fruit color, you're safe
+	beq $t1, 0xffffff, BodyCollisionDone #if the color is the fruit color, you're safe
+	beq $t1, 0x212121, BodyCollisionDone #if the color is the fruit color, you're safe
 	#add $s6, $t1, $zero
 	lw $t2, snakeColor
 	lw $t3, borderColor
@@ -1080,6 +1100,8 @@ CheckRight:
 	beq $t1, 0x32a852, BodyCollisionDone #if the color is the fruit color, you're safe
 	beq $t1, 0xde3333 , BodyCollisionDone #if the color is the fruit color, you're safe
 	beq $t1, 0xded233, BodyCollisionDone #if the color is the fruit color, you're safe
+	beq $t1, 0xffffff, BodyCollisionDone #if the color is the fruit color, you're safe
+	beq $t1, 0x212121, BodyCollisionDone #if the color is the fruit color, you're safe
 	#add $s6, $t1, $zero
 	lw $t2, snakeColor
 	lw $t3, borderColor
@@ -1100,33 +1122,10 @@ BodyCollisionDone:
 # no return values
 ##################################################################
 IncreaseDifficulty:
-	lw $t0, score #get the player's score
-	la $t1, scoreMilestones #get the milestones base address
-	lw $t2, scoreArrayPosition #get the array position
-	add $t1, $t1, $t2 #move to position in array
-	lw $t3, 0($t1) #get the value at the array index
-	
-	#if the player score is not equal to the current milestone
-	#exit the function, if they are equal increase difficulty
-	bne $t3, $t0, FinishedDiff 
-	#increase the index for the milestones array
-	addiu $t2, $t2, 4
-	#store new position
-	sw $t2, scoreArrayPosition
-	#load the scoreGain variable to increase the
-	#points awarded for eating fruit
-	lw $t0, scoreGain
-	#multiply gain by 2
-	sll $t0, $t0, 1 
-	#load the game speed
 	lw $t1, gameSpeed
-	#subtract 50 from the move speed
-	addiu $t1, $t1, -25
-	#store new speed
-	sw $t1, gameSpeed
-
-FinishedDiff:
-	jr $ra
+	subi $t1, $t1, 10 #subtract 10 from the move speed
+	sw $t1, gameSpeed #store new speed
+	j FinishSpawnFruit
 
 Exit:   
 	#play a sound tune to signify game over
