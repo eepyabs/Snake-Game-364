@@ -12,7 +12,11 @@
           Pressing R in game makes each cell of the snake become a different color
 - Unexpected Change:
     -- Nyan Cat
+<<<<<<< HEAD
           When the snake hits the wall, a bit map image of Nyan Cat appears
+=======
+          When the snake hits a wall, a bit-rate image of Nyan Cat appears on the screen
+>>>>>>> origin/unexpected-Abbie
 
 - Optimization:
     -- 
