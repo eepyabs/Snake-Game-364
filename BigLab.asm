@@ -1,17 +1,26 @@
 ######################################################################
-# 			     SNAKE!!!!                               #
+# 			     			 SNAKE!!!!                               #
 ######################################################################
 #           Programmed by Shane Shafferman and Eric Deas             #
 ######################################################################
-#	This program requires the Keyboard and Display MMIO          #
+#		This program requires the Keyboard and Display MMIO          #
 #       and the Bitmap Display to be connected to MIPS.              #
-#								     #
+#																     #
 #       Bitmap Display Settings:                                     #
-#	Unit Width: 8						     #
-#	Unit Height: 8						     #
-#	Display Width: 512					     #
-#	Display Height: 512					     #
-#	Base Address for Display: 0x10008000 ($gp)		     #
+#							Unit Width: 8						     #
+#							Unit Height: 8						     #
+#							Display Width: 512					     #
+#							Display Height: 512					     #
+#				Base Address for Display: 0x10008000 ($gp)		     #
+######################################################################
+
+######################################################################
+#						     Changes								 #
+######################################################################
+#	Harrison Day: Large change - more fruits						 #
+#	Robert Moore: Small change - toggleable rainbow mode (r-key)	 #
+#	Brayden Callender: Optimization - snake initialization			 #
+#	Sarah Wallen - Unexpected change - Nyan Cat image upon loss		 #
 ######################################################################
 
 .data
